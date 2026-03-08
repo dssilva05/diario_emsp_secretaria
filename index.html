@@ -1587,26 +1587,14 @@ async function justificarFalta(id) {
         }
     }
 }
-    
-google.script.run
-  .withSuccessHandler(exibirFaltasNaTela)
-  .getFaltasSecretaria(profNomeLogado); // profNomeLogado é a variável que você já usa no login
 
-// Para validar uma falta
-function botaoValidar(id) {
-  google.script.run
-    .withSuccessHandler(resultado => {
-       alert("Status: " + resultado);
-       carregarFaltas(); // recarrega a tabela
-    })
-    .validarFalta(id, profNomeLogado);
-}
 
     
 </script>
 
 </body>
 </html>
+
 
 
 
