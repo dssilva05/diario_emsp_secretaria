@@ -1523,8 +1523,14 @@ async function gravarOcorrencia() {
     const corpo = document.getElementById('corpoFaltas');
     corpo.innerHTML = "<tr><td colspan='7'>Carregando...</td></tr>";
     
-    // Chama a nova função do script passando o ID do usuário logado
-    google.script.run.withSuccessHandler(exibirFaltas).getFaltasSecretaria(usuarioLogado);
+    try {
+        // Mudança: Usando fetch em vez de google.script.run
+        const res = await fetch(`${SCRIPT_URL}?acao=verJustificativas&usuarioLogado=${profNomeLogado}`);
+        const dados = await res.json();
+        exibirFaltas(dados);
+    } catch (e) {
+        corpo.innerHTML = "<tr><td colspan='7'>Erro ao carregar justificativas.</td></tr>";
+    }
 }
 
 function exibirFaltas(dados) {
@@ -1562,12 +1568,24 @@ function exibirFaltas(dados) {
     }
 }
 
-function justificarFalta(id) {
+async function justificarFalta(id) {
     if(confirm("Deseja marcar esta falta como JUSTIFICADA?")) {
-        google.script.run.withSuccessHandler(() => {
-            alert("Status atualizado!");
-            carregarFaltas();
-        }).validarFalta(id, usuarioLogado);
+        try {
+            // Mudança: Usando fetch com POST para validar
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: new URLSearchParams({
+                    acao: 'validarFalta',
+                    idFalta: id,
+                    usuarioLogado: profNomeLogado
+                })
+            });
+            alert("Solicitação enviada! Atualizando...");
+            setTimeout(carregarFaltas, 1000); // Aguarda um pouco para o Google processar
+        } catch (e) {
+            alert("Erro ao validar falta.");
+        }
     }
 }
     
@@ -1590,6 +1608,7 @@ function botaoValidar(id) {
 
 </body>
 </html>
+
 
 
 
