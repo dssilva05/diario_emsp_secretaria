@@ -391,6 +391,32 @@
     <button class="btn-main" style="background:#d32f2f; margin-top:15px;" onclick="excluirAluno()">Excluir Aluno Definitivamente</button>
 </div>
         </div>
+
+        <div id="aba5" class="tab-content hidden">
+    <div class="card">
+        <div class="card-header">Gerenciamento de Justificativas de Faltas</div>
+        <div class="card-body">
+            <button onclick="carregarFaltas()" class="btn-atualizar">🔄 Atualizar Lista</button>
+            <div class="table-responsive">
+                <table id="tabelaFaltas">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Aluno</th>
+                            <th>Período</th>
+                            <th>Motivo</th>
+                            <th>Atestado</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoFaltas">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
     </div>
 </div>
 
@@ -563,6 +589,16 @@
     inputResp.style.background = "#e9ecef"; // Fundo cinza de leitura
     inputResp.style.border = "1px solid #ccc";
 
+    // Verifica se a disciplina/função (coluna G) é SECRETARIA
+const ehSecretaria = String(d.disciplina).trim().toUpperCase() === "SECRETARIA";
+
+const btnSecretaria = document.getElementById('t5'); // ID do botão da Aba 5
+if (ehSecretaria) {
+    btnSecretaria.classList.remove('hidden');
+} else {
+    btnSecretaria.classList.add('hidden');
+}
+        
     const seletorExistente = document.getElementById('containerMultiDisciplina');
     if (seletorExistente) seletorExistente.remove();
 
@@ -1480,10 +1516,65 @@ async function gravarOcorrencia() {
     container.classList.remove('hidden');
     container.scrollIntoView({ behavior: 'smooth' });
 }
+
+
+    async function carregarFaltas() {
+    const corpo = document.getElementById('corpoFaltas');
+    corpo.innerHTML = "<tr><td colspan='7'>Carregando...</td></tr>";
+    
+    // Chama a nova função do script passando o ID do usuário logado
+    google.script.run.withSuccessHandler(exibirFaltas).getFaltasSecretaria(usuarioLogado);
+}
+
+function exibirFaltas(dados) {
+    const corpo = document.getElementById('corpoFaltas');
+    corpo.innerHTML = "";
+    
+    if (dados.length <= 1) {
+        corpo.innerHTML = "<tr><td colspan='7'>Nenhuma falta registrada.</td></tr>";
+        return;
+    }
+
+    // Pula o cabeçalho (i=1)
+    for (let i = 1; i < dados.length; i++) {
+        const [id, dataReg, turma, aluno, inicio, fim, motivo, resp, parent, url, status] = dados[i];
+        
+        const tr = document.createElement('tr');
+        const linkAtestado = url !== "Não enviado" 
+            ? `<a href="${url}" target="_blank" class="btn-ver">📄 Ver</a>` 
+            : "❌";
+            
+        const botaoAcao = status === "PENDENTE" 
+            ? `<button onclick="justificarFalta('${id}')" class="btn-ok">Validar</button>` 
+            : "✅ OK";
+
+        tr.innerHTML = `
+            <td>${id}</td>
+            <td><b>${aluno}</b><br><small>${turma}</small></td>
+            <td>${inicio} a ${fim}</td>
+            <td>${motivo}</td>
+            <td>${linkAtestado}</td>
+            <td class="status-${status.toLowerCase()}">${status}</td>
+            <td>${botaoAcao}</td>
+        `;
+        corpo.appendChild(tr);
+    }
+}
+
+function justificarFalta(id) {
+    if(confirm("Deseja marcar esta falta como JUSTIFICADA?")) {
+        google.script.run.withSuccessHandler(() => {
+            alert("Status atualizado!");
+            carregarFaltas();
+        }).validarFalta(id, usuarioLogado);
+    }
+}
+    
 </script>
 
 </body>
 </html>
+
 
 
 
