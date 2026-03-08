@@ -1524,12 +1524,13 @@ async function gravarOcorrencia() {
     corpo.innerHTML = "<tr><td colspan='7'>Carregando...</td></tr>";
     
     try {
-        // Mudança: Usando fetch em vez de google.script.run
+        // Mudamos para fetch para funcionar fora do Google
         const res = await fetch(`${SCRIPT_URL}?acao=verJustificativas&usuarioLogado=${profNomeLogado}`);
         const dados = await res.json();
         exibirFaltas(dados);
     } catch (e) {
-        corpo.innerHTML = "<tr><td colspan='7'>Erro ao carregar justificativas.</td></tr>";
+        console.error("Erro na Aba 5:", e);
+        corpo.innerHTML = "<tr><td colspan='7'>Erro ao carregar ou sem permissão.</td></tr>";
     }
 }
 
@@ -1571,20 +1572,18 @@ function exibirFaltas(dados) {
 async function justificarFalta(id) {
     if(confirm("Deseja marcar esta falta como JUSTIFICADA?")) {
         try {
-            // Mudança: Usando fetch com POST para validar
-            const res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: new URLSearchParams({
-                    acao: 'validarFalta',
-                    idFalta: id,
-                    usuarioLogado: profNomeLogado
-                })
-            });
-            alert("Solicitação enviada! Atualizando...");
-            setTimeout(carregarFaltas, 1000); // Aguarda um pouco para o Google processar
+            // Usamos POST com no-cors para enviar a validação
+            const dados = new URLSearchParams();
+            dados.append('acao', 'validarFalta');
+            dados.append('idFalta', id);
+            dados.append('usuarioLogado', profNomeLogado);
+
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: dados });
+            
+            alert("Solicitação enviada! A lista será atualizada.");
+            setTimeout(carregarFaltas, 1500); // Aguarda o Google processar e atualiza
         } catch (e) {
-            alert("Erro ao validar falta.");
+            alert("Erro ao processar validação.");
         }
     }
 }
@@ -1608,6 +1607,7 @@ function botaoValidar(id) {
 
 </body>
 </html>
+
 
 
 
