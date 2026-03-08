@@ -1576,16 +1576,27 @@ async function gravarOcorrencia() {
 
     async function carregarFaltas() {
     const corpo = document.getElementById('corpoFaltas');
-    corpo.innerHTML = "<tr><td colspan='7'>Carregando...</td></tr>";
+    corpo.innerHTML = "<tr><td colspan='7' style='text-align:center;'>⏳ Carregando dados do servidor...</td></tr>";
     
+    // Recupera o ID do usuário salvo no localStorage se a variável global estiver vazia
+    const userLocal = JSON.parse(localStorage.getItem('diarioAcessoSobral') || '{}');
+    const idParaEnvio = userLocal.usuarioId || profNomeLogado;
+
     try {
-        // Mudamos para fetch para funcionar fora do Google
-        const res = await fetch(`${SCRIPT_URL}?acao=verJustificativas&usuarioLogado=${profNomeLogado}`);
+        // Importante: Passamos o usuarioLogado na URL
+        const res = await fetch(`${SCRIPT_URL}?acao=verJustificativas&usuarioLogado=${encodeURIComponent(idParaEnvio)}`);
         const dados = await res.json();
+        
+        // Verifica se o Script retornou erro de permissão
+        if (dados.status === "Erro") {
+            corpo.innerHTML = `<tr><td colspan='7' style='color:red; text-align:center;'>🚫 ${dados.msg}</td></tr>`;
+            return;
+        }
+
         exibirFaltas(dados);
     } catch (e) {
-        console.error("Erro na Aba 5:", e);
-        corpo.innerHTML = "<tr><td colspan='7'>Erro ao carregar ou sem permissão.</td></tr>";
+        console.error("Erro ao puxar dados:", e);
+        corpo.innerHTML = "<tr><td colspan='7' style='text-align:center;'>❌ Erro ao conectar com o Google Sheets.</td></tr>";
     }
 }
 
@@ -1650,6 +1661,7 @@ async function justificarFalta(id) {
 
 </body>
 </html>
+
 
 
 
