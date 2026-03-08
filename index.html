@@ -609,6 +609,30 @@
     window.addEventListener('online', atualizarStatusRede);
     window.addEventListener('offline', atualizarStatusRede);
 
+
+    async function carregarAlunos() {
+    const selectAlunos = document.getElementById('selAlunos'); // Nome do seu campo select
+    try {
+        const res = await fetch(`${SCRIPT_URL}?acao=getAlunos`); // Certifique-se que 'getAlunos' existe no gs
+        const alunos = await res.json();
+        
+        if (!alunos || alunos.length === 0) {
+            console.error("Nenhum aluno retornado");
+            return;
+        }
+
+        selectAlunos.innerHTML = '<option value="">Selecione o Aluno</option>';
+        alunos.forEach(aluno => {
+            let opt = document.createElement('option');
+            opt.value = aluno.nome; // Ou o índice correto do seu array
+            opt.textContent = aluno.nome;
+            selectAlunos.appendChild(opt);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar lista:", error);
+    }
+}
+    
     async function executarLogin() {
         const u = document.getElementById('userLogin').value, s = document.getElementById('passLogin').value;
         const btn = document.getElementById('btnEntrar');
@@ -1661,6 +1685,7 @@ async function justificarFalta(id) {
 
 </body>
 </html>
+
 
 
 
