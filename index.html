@@ -201,6 +201,60 @@
     
     .escola-txt h1 { color: #0d47a1 !important; }
 }
+
+        /* Estilos para a Tabela de Justificativas */
+#tabelaFaltas {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: white;
+    font-size: 13px;
+}
+
+#tabelaFaltas th {
+    background: var(--blue);
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+#tabelaFaltas td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+}
+
+.btn-ver {
+    background: var(--blue);
+    color: white;
+    padding: 5px 10px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.btn-ok {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.status-pendente { color: #d35400; font-weight: bold; }
+.status-justificada { color: #27ae60; font-weight: bold; }
+
+.btn-atualizar {
+    background: var(--gold);
+    color: black;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
     
     </style>
 </head>
@@ -1350,14 +1404,14 @@ async function gravarOcorrencia() {
     }
 
     function tab(n) {
-    // 1. Bloqueio de Segurança: Se for a aba 4 e não for Diretor, cancela.
+    // 1. Bloqueio de Segurança para Aba 4
     if (n === 4 && cargoLogado !== "Diretor") {
         alert("Acesso restrito à equipe de gestão.");
         return;
     }
 
-    // 2. Lógica de alternância (Loop em todas as 4 abas)
-    [1, 2, 3, 4].forEach(i => {
+    // 2. Lógica de alternância (Loop atualizado para 5 abas)
+    [1, 2, 3, 4, 5].forEach(i => {
         const aba = document.getElementById('aba' + i);
         const btn = document.getElementById('t' + i);
         
@@ -1376,6 +1430,7 @@ async function gravarOcorrencia() {
 
     // 3. Funções específicas ao abrir a aba
     if (n === 4) carregarListaTransferencia();
+    if (n === 5) carregarFaltas(); // Carrega os dados automaticamente ao clicar na aba
     if (n === 1 && !idEditando) limparForm();
 }
     
@@ -1538,31 +1593,32 @@ function exibirFaltas(dados) {
     const corpo = document.getElementById('corpoFaltas');
     corpo.innerHTML = "";
     
-    if (dados.length <= 1) {
-        corpo.innerHTML = "<tr><td colspan='7'>Nenhuma falta registrada.</td></tr>";
+    if (!dados || dados.length <= 1) {
+        corpo.innerHTML = "<tr><td colspan='7' style='text-align:center; padding:20px;'>Nenhuma falta encontrada na planilha.</td></tr>";
         return;
     }
 
-    // Pula o cabeçalho (i=1)
+    // i=1 pula o cabeçalho da planilha
     for (let i = 1; i < dados.length; i++) {
-        const [id, dataReg, turma, aluno, inicio, fim, motivo, resp, parent, url, status] = dados[i];
-        
+        const r = dados[i];
         const tr = document.createElement('tr');
-        const linkAtestado = url !== "Não enviado" 
-            ? `<a href="${url}" target="_blank" class="btn-ver">📄 Ver</a>` 
+        
+        // r[0]=ID, r[2]=Turma, r[3]=Aluno, r[4]=Início, r[5]=Fim, r[6]=Motivo, r[9]=Link, r[10]=Status
+        const linkAtestado = (r[9] && r[9].includes("http")) 
+            ? `<a href="${r[9]}" target="_blank" class="btn-ver">📄 VER</a>` 
             : "❌";
             
-        const botaoAcao = status === "PENDENTE" 
-            ? `<button onclick="justificarFalta('${id}')" class="btn-ok">Validar</button>` 
+        const botaoAcao = r[10] === "PENDENTE" 
+            ? `<button onclick="justificarFalta('${r[0]}')" class="btn-ok">Validar</button>` 
             : "✅ OK";
 
         tr.innerHTML = `
-            <td>${id}</td>
-            <td><b>${aluno}</b><br><small>${turma}</small></td>
-            <td>${inicio} a ${fim}</td>
-            <td>${motivo}</td>
-            <td>${linkAtestado}</td>
-            <td class="status-${status.toLowerCase()}">${status}</td>
+            <td>${r[0]}</td>
+            <td><b>${r[3]}</b><br><small>${r[2]}</small></td>
+            <td>${r[4]} - ${r[5]}</td>
+            <td>${r[6]}</td>
+            <td style="text-align:center;">${linkAtestado}</td>
+            <td class="status-${r[10].toLowerCase()}">${r[10]}</td>
             <td>${botaoAcao}</td>
         `;
         corpo.appendChild(tr);
@@ -1594,6 +1650,7 @@ async function justificarFalta(id) {
 
 </body>
 </html>
+
 
 
 
